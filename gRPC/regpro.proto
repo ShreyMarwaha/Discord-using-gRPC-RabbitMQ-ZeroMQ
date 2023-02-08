@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message Name {
+    optional string code = 1;
+}
+
+message Number {
+    optional int32 value = 1;
+}
+
+service regFunc {
+    rpc newServer(Name) returns (Number) {}
+    rpc fetchServers(Name) returns (Name) {}
+}
+
+
+
+
+
