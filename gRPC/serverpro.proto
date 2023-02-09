@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message String {
+    optional string code = 1;
+}
+
+message Ints {
+    optional int32 value = 1;
+}
+
+service serverFunc {
+    rpc addUser (String) returns (Ints) {}
+    rpc removeUser (String) returns (Ints) {}
+}
