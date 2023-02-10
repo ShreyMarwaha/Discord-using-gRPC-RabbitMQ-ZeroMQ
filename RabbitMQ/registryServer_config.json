@@ -1,0 +1,7 @@
+{
+	"port": 1000,
+	"host": "localhost",
+	"username": "user",
+	"password": "pass",
+	"max_connections": 10
+}
