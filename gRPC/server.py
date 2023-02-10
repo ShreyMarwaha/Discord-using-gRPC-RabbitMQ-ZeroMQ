@@ -56,12 +56,27 @@ if (start == True):
             print()
             return response
 
+        def addArticle(self, request, context):
+            print()
+            print("Request received to Publish Article from user - ", request.User)
+            response = serverpro_pb2.Ints()
+            response.value = serverfunction.add_article(request.WhichOneof("Type"), request.Time, request.Author, request.Content, servNumber)
+            if (response.value == 0):
+                print("Article Add failure, TRY AGAIN!")
+            else:
+                print("Article Added Successfully| Article Number - ", response.value)
+            print()
+            return response
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     serverpro_pb2_grpc.add_serverFuncServicer_to_server(serverFuncServicer(), server)
 
     f = open("/home/kali/Desktop/DSCD/A1/Code/UserList"+str(servNumber), "w")
+    f.write("0")
+    f.close()
+
+    f = open("/home/kali/Desktop/DSCD/A1/Code/ArticleList"+str(servNumber), "w")
     f.write("0")
     f.close()
 

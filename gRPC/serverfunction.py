@@ -34,4 +34,16 @@ def remove_User(name, servNo):
     f.close()
     return 1
 
+def add_article(Type, Time, Author, Content, servNo):
+    f = open("/home/kali/Desktop/DSCD/A1/Code/ArticleList"+str(servNo), "r")
+    tempData = f.read()
+    currarticles = int(tempData[0])
+    currarticles+=1
+    divider = "^~^"
+    newText = str(currarticles) + tempData[1:] + "|" + Type + "|&*~" + str(Time) + "|" + Author + "|" + Content + divider
+    print(newText)
+    f = open("/home/kali/Desktop/DSCD/A1/Code/ArticleList"+str(servNo), "w")
+    f.write(newText)
+    f.close()
+    return currarticles
 
