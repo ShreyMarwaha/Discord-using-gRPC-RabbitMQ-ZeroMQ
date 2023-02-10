@@ -8,7 +8,34 @@ message Ints {
     optional int32 value = 1;
 }
 
+message pubArticle {
+    oneof Type {
+        int32 SPORTS = 1;
+        int32 FASHION = 2;
+        int32 POLITICS = 3;
+    }
+    optional string Author = 4;
+    optional int32 Time = 5;
+    optional string Content = 6;
+    optional string User = 7;
+
+}
+
+message getArticle {
+    oneof Type {
+        int32 SPORTS = 1;
+        int32 FASHION = 2;
+        int32 POLITICS = 3;
+    }
+    optional string Author = 4;
+    optional int32 Time = 5;
+    optional int32 Timebf = 6;
+    optional string User = 7;
+}
+
 service serverFunc {
     rpc addUser (String) returns (Ints) {}
     rpc removeUser (String) returns (Ints) {}
+    rpc addArticle (pubArticle) returns (Ints) {}
+    rpc fetchArticle (getArticle) returns (String) {}
 }

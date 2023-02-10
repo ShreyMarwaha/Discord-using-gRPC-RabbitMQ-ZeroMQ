@@ -24,6 +24,16 @@ class serverFuncStub(object):
                 request_serializer=serverpro__pb2.String.SerializeToString,
                 response_deserializer=serverpro__pb2.Ints.FromString,
                 )
+        self.addArticle = channel.unary_unary(
+                '/serverFunc/addArticle',
+                request_serializer=serverpro__pb2.pubArticle.SerializeToString,
+                response_deserializer=serverpro__pb2.Ints.FromString,
+                )
+        self.fetchArticle = channel.unary_unary(
+                '/serverFunc/fetchArticle',
+                request_serializer=serverpro__pb2.getArticle.SerializeToString,
+                response_deserializer=serverpro__pb2.String.FromString,
+                )
 
 
 class serverFuncServicer(object):
@@ -41,6 +51,18 @@ class serverFuncServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def addArticle(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def fetchArticle(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_serverFuncServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -53,6 +75,16 @@ def add_serverFuncServicer_to_server(servicer, server):
                     servicer.removeUser,
                     request_deserializer=serverpro__pb2.String.FromString,
                     response_serializer=serverpro__pb2.Ints.SerializeToString,
+            ),
+            'addArticle': grpc.unary_unary_rpc_method_handler(
+                    servicer.addArticle,
+                    request_deserializer=serverpro__pb2.pubArticle.FromString,
+                    response_serializer=serverpro__pb2.Ints.SerializeToString,
+            ),
+            'fetchArticle': grpc.unary_unary_rpc_method_handler(
+                    servicer.fetchArticle,
+                    request_deserializer=serverpro__pb2.getArticle.FromString,
+                    response_serializer=serverpro__pb2.String.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -95,5 +127,39 @@ class serverFunc(object):
         return grpc.experimental.unary_unary(request, target, '/serverFunc/removeUser',
             serverpro__pb2.String.SerializeToString,
             serverpro__pb2.Ints.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def addArticle(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/serverFunc/addArticle',
+            serverpro__pb2.pubArticle.SerializeToString,
+            serverpro__pb2.Ints.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def fetchArticle(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/serverFunc/fetchArticle',
+            serverpro__pb2.getArticle.SerializeToString,
+            serverpro__pb2.String.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
