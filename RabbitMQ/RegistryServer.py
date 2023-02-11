@@ -5,38 +5,59 @@ import util
 import json
 # This is basically a consumer
 
-config = json.load(open('registryServer_config.json'))
+config = json.load(open('config.json'))
+SERVERS = []
+channel = util.connect(config['host'], config['port'])
 
-# stores server's uuid
-server_list = []
+
+def getServerList():
+    message = ''
+    for server in SERVERS:
+        message += server + ','
+    return message
+
+
+def handle_Register(body):
+    print(" [x] Rregistration Request %r" % body['id'])
+    if len(SERVERS) < config.max_servers:
+        SERVERS.append(body['id'])
+        print(" [x] Server Registered %r" % body['id'])
+        print(" [x] Server List: %r" % SERVERS)
+        message = {"from": 'regserver', "id": 'regserver',
+                   "message": "success"}
+        channel.basic_publish(
+            exchange='', routing_key=body[id], body=str(message))
+    else:
+        print(" [x] Server Registration Failed %r" % body['id'])
+        message = {"from": 'regserver', "id": 'regserver',
+                   "message": "failed"}
+        channel.basic_publish(
+            exchange='', routing_key=body[id], body=str(message))
 
 
 def main():
-    channel = util.connect(config['host'], config['port'])
-    channel.queue_declare(queue='servers')
-    channel.queue_declare(queue='clients')
-
-    def callback_client(ch, method, properties, body):
-        print(" [x] Server List Request Received %r" % body)
-        message = 'here is the list'
-
-        channel.basic_publish(
-            exchange='', routing_key=body.decode(), body=message)
-        print(" [x] Sent", message)
-    # ch.basic_ack(delivery_tag=method.delivery_tag)
+    channel.queue_declare(queue='regserver')
 
     def callback_server(ch, method, properties, body):
-        print(" [x] Rregistration Request %r" % body)
-        server_list.append(body)
-        print(server_list)
+        body = json.loads(body.decode())
+        if body['from'] == 'server':
+            if body['function'] == 'Register':
+                handle_Register(body)
+            else:
+                print(" [x] Unsupported Request from %r" % body['id'])
+        elif body['from'] == 'client':
+            if body['function'] == 'GetServerList':
+                print(" [x] Server list request from %r" % body['id'])
+                channel.basic_publish(
+                    exchange='', routing_key=body[id], body=getServerList())
+            else:
+                print(" [x] Unsupported Request from %r" % body['id'])
+        else:
+            print(" [x] Unrecognized Request from %r" % body['id'])
 
     channel.basic_consume(
-        queue='clients', on_message_callback=callback_client, auto_ack=True)
-
-    channel.basic_consume(
-        queue='servers', on_message_callback=callback_server, auto_ack=True)
-
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+        queue='regserver', on_message_callback=callback_server, auto_ack=True)
+    print(' [*] Name: Registry Server,  Status: Online. \nTo exit press CTRL+C')
     channel.start_consuming()
 
 
