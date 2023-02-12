@@ -9,7 +9,7 @@ socket = context.socket(zmq.REP)
 socket.bind("tcp://*:"+str(config["registry_server_port"]))
 
 # -------------------------------------------------------------------
-# Function Definitions
+# Function Definitions - Incoming Functions
 def Register(ip, port):
     if len(SERVERS) < config["max_servers"]:
         SERVERS.append("ServerName" + str(len(SERVERS)+1) + " - " + ip + ":" + port)
