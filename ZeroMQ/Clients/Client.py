@@ -78,17 +78,49 @@ def GetArticles(creds):
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://"+ creds[creds.index("-")+2:])
 
-    socket.send_string(f"GET_ARTICLES, UUID:{unique_id}")
+    print("ARTICLE SEARCH PARAMETERS (type 0 to leave blank)")
+    print("Choose Article Type:")
+    print("1. SPORTS")
+    print("2. FASHION")
+    print("3. POLITICS")
+    print("Enter your choice:")
+    c = int(input())
+    print("Enter Article Author:")
+    author = str(input())
+    print("Enter Article Content:")
+    content = str(input())
+    print("Search for Articles from Date (dd/mm/yyyy):")
+    date = str(input())
+    
+    if c == 0:
+        socket.send_string(f"GET_ARTICLES, UUID:{unique_id}, TYPE:0, AUTHOR:{author}, CONTENT:{content}, DATE:{date}")
+    elif c == 1:
+        socket.send_string(f"GET_ARTICLES, UUID:{unique_id}, TYPE:SPORTS, AUTHOR:{author}, CONTENT:{content}, DATE:{date}")
+    elif c == 2:
+        socket.send_string(f"GET_ARTICLES, UUID:{unique_id}, TYPE:FASHION, AUTHOR:{author}, CONTENT:{content}, DATE:{date}")
+    elif c == 3:
+        socket.send_string(f"GET_ARTICLES, UUID:{unique_id}, TYPE:POLITICS, AUTHOR:{author}, CONTENT:{content}, DATE:{date}")
+    else:
+        socket.send_string(f"GET_ARTICLES, UUID:{unique_id}, TYPE: , AUTHOR:{author}, CONTENT:{content}, DATE:{date}")
+    
     message = socket.recv().decode('utf-8')
+    
     l = message[2:-2].split("', '")
-
-    for i in range(len(l)):
-        print(f"{i+1}. {l[i]}")
+    if l[0] == "FAI":
+        print("FAIL")
+        return
+    elif l[0] == "":
+        print("NO ARTICLES FOUND")
+        return
+    else:
+        for i in range(len(l)):
+            print(f"{i+1} {l[i]}")
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
     print(f"CLIENT STARTED AT {addressIP}:{addressPort}")
     while True:
+        print("-------------------------------------------------------------------")
         print("MENU")
         print("1. Request Server List")
         print("2. Join Server")
@@ -98,6 +130,7 @@ if __name__ == "__main__":
         print("6. Exit")
         print("Enter your choice:")
         choice = int(input())
+        print("-------------------------------------------------------------------")
 
         if choice == 1:
             print(f"REQUESTING SERVER LIST FROM REGISTRY SERVER AT {config['registry_server_host']}:{config['registry_server_port']}")

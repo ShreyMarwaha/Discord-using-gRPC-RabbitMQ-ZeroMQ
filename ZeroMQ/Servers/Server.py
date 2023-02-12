@@ -56,11 +56,15 @@ def PublishArticle(id, msg):
     else:
         return b"FAIL"
     
-def GetArticles(id):
+def GetArticles(id, type, author, content, date):
     if id in CLIENTELE:
+        if date != "0":
+            date = datetime(date[0:2], date[3:5], date[6:])
         art = []
+
         for i, articles in enumerate(ARTICLES):
-            art.append(f"TYPE: {articles.type}, AUTHOR: {articles.author}, TIME: {articles.time}, CONTENT: {articles.content}")
+            if (type == "0" or articles.type == type) and (author == "0" or articles.author == author) and (content == "0" or articles.content == content) and (date == "0" or datetime.strptime(articles.time, "%Y-%m-%d") >= date):
+                art.append(f"TYPE: {articles.type}, AUTHOR: {articles.author}, TIME: {articles.time}, CONTENT: {articles.content}")
         return art
     else:
         return b"FAIL"
@@ -97,7 +101,12 @@ if __name__ == "__main__":
 
         # Get Articles
         elif(message.startswith(b"GET_ARTICLES")):
-            uuid = message[message.index(b":") + 1 : ].decode("utf-8")
-            print(f"ARTICLES REQUEST FROM CLIENT {uuid} FOR ALL ARTICLES")
-            res = str(GetArticles(uuid))
+            uuid = message[message.index(b":") + 1 : message.index(b", TYPE")].decode("utf-8")
+            type = message[message.index(b", TYPE:") + 7 : message.index(b", AUTHOR")].decode("utf-8")
+            author = message[message.index(b", AUTHOR:") + 9 : message.index(b", CONTENT")].decode("utf-8")
+            content = message[message.index(b", CONTENT:") + 10 : message.index(b", DATE")].decode("utf-8")
+            date = message[message.index(b", DATE:") + 7 : ].decode("utf-8")
+
+            print(f"ARTICLES ACCESS REQUEST FROM CLIENT {uuid} FOR TYPE: {type}, AUTHOR: {author}, CONTENT: {content}, DATE: {date}")
+            res = str(GetArticles(uuid, type, author, content, date))
             server_socket.send_string(res)
