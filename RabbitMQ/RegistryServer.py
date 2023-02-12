@@ -14,16 +14,19 @@ channel = util.connect(config["host"], config["port"])
 def getServerList():
     list_message = {"from": "regserver", "id": "regserver",
                     "function": "GetServerList"}
-
-    list_message["message"] = ','.join(SERVERS)
+    msg = ''
+    for server in SERVERS:
+        _ = '#'.join(server)
+        msg += _ + ','
+    list_message["message"] = msg[:-1]
+    # uuid#address,uuid#address
     return json.dumps(list_message)
 
 
 def handle_Register(body):
-    print(" [x] Rregistration Request %r" % body["id"])
+    print(" [x] JOIN REQUEST FROM %r" % body["address"])
     if len(SERVERS) < config['max_servers']:
-        SERVERS.append(body["id"])
-        print(" [x] Server Registered %r" % body["id"])
+        SERVERS.append([body["id"], body["address"]])
         print(" [x] Server List: %r" % SERVERS)
         print(" [x] Load: %r/%r" % (len(SERVERS), config['max_servers']))
         message = {"from": "regserver", "id": "regserver",
@@ -33,7 +36,7 @@ def handle_Register(body):
     else:
         print(" [x] Server Registration Failed %r" % body["id"])
         message = {"from": "regserver", "id": "regserver",
-                   "message": "failed"}
+                   "message": "failed", "reason": "server full"}
         channel.basic_publish(
             exchange="", routing_key=body["id"], body=json.dumps(message))
 
@@ -47,16 +50,16 @@ def main():
             if body["function"] == "Register":
                 handle_Register(body)
             else:
-                print(" [x] Unsupported Request from %r" % body["id"])
+                print(" [x] Unsupported Request from %r" % body["address"])
         elif body["from"] == "client":
             if body["function"] == "GetServerList":
-                print(" [x] Server list request from %r" % body["id"])
+                print(" [x] SERVER LIST REQUEST FROM %r" % body["address"])
                 channel.basic_publish(
                     exchange="", routing_key=body["id"], body=getServerList())
             else:
-                print(" [x] Unsupported Request from %r" % body["id"])
+                print(" [x] Unsupported Request from %r" % body["address"])
         else:
-            print(" [x] Unrecognized Request from %r" % body["id"])
+            print(" [x] Unrecognized Request from %r" % body["address"])
 
     channel.basic_consume(
         queue="regserver", on_message_callback=callback_server, auto_ack=True)

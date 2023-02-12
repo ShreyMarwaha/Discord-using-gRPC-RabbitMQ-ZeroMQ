@@ -3,12 +3,15 @@ import sys
 import os
 import util
 import json
-import uuid
 from datetime import date, datetime
 
 config = json.load(open("config.json"))
 channel = util.connect(config["host"], config["port"])
+
 unique_id = str(uuid.uuid1())
+PORT = channel.connection._impl._transport._sock.getsockname()[1]
+address = "localhost:" + str(PORT)
+
 CLIENTELE = []
 ARTICLES = []
 
@@ -32,18 +35,23 @@ def to_unicode_string(s):
 
 
 def register():
-    message = {"from": "server", "id": unique_id, "function": "Register"}
-    channel.basic_publish(
-        exchange="", routing_key="regserver", body=json.dumps(message))
-    print(" [x] Sent Register request to Registry Server")
+    message = {"from": "server", "id": unique_id,
+               "function": "Register", "address": address}
+    try:
+        channel.basic_publish(
+            exchange="", routing_key="regserver", body=json.dumps(message))
+        print(" [x] Sent Register request to Registry Server")
+    except Exception as e:
+        print(" [x] Error: %r" % e)
 
 
 def handle_JoinServer(body):
+    print(" [x] JOIN REQUEST FROM %r" % body["id"])
     if len(CLIENTELE) < config["max_clients_per_server"]:
         if body["id"] in CLIENTELE:
             print(
                 " [x] Client Registration Failed %r. Reason: Client already registered" % body["id"])
-            message = {"from": "server", "id": unique_id,
+            message = {"from": "server", "id": unique_id, "address": address,
                        "function": "JoinServer", "message": "failed", "reason": "already registered"}
             channel.basic_publish(
                 exchange="", routing_key=body["id"], body=json.dumps(message))
@@ -54,13 +62,13 @@ def handle_JoinServer(body):
             print(" [x] Load: %r/%r" %
                   (len(CLIENTELE), config["max_clients_per_server"]))
 
-            message = {"from": "server", "id": unique_id, "function": "JoinServer",
-                       "message": "success"}
+            message = {"from": "server", "id": unique_id, "address": address,
+                       "function": "JoinServer",    "message": "success"}
             channel.basic_publish(
                 exchange="", routing_key=body["id"], body=json.dumps(message))
     else:
         print(" [x] Client Registration Failed %r" % body["id"])
-        message = {"from": "server", "id": unique_id,
+        message = {"from": "server", "id": unique_id, "address": address,
                    "function": "JoinServer", "message": "failed", "reason": "server full"}
         channel.basic_publish(
             exchange="", routing_key=body["id"], body=json.dumps(message))
@@ -68,27 +76,26 @@ def handle_JoinServer(body):
 
 def handle_LeaveServer(body):
     global CLIENTELE
-    print(" [x] Leave request from %r" % body["id"])
+    print(" [x] LEAVE REQUEST FROM %r" % body["id"])
     CLIENTELE.remove(body["id"])
     print(" [x] Clientele: %r" % CLIENTELE)
-    message = {"from": "server", "id": unique_id, "function": "LeaveServer",
+    message = {"from": "server", "id": unique_id, "address": address, "function": "LeaveServer",
                "message": "success"}
     channel.basic_publish(
         exchange="", routing_key=body["id"], body=json.dumps(message))
 
 
 def handle_GetArticles(body):
-    print(body)
-    print(" [x] GetArticles request from %r" % body["id"])
+    print(" [x] ARTICLES REQUEST FROM %r" % body["id"])
     articles_list = []
     requested_date = datetime.strptime(
         body["article"]["date"], "%Y-%m-%d").date()
-    for i, article in enumerate(ARTICLES):
+    for article in ARTICLES:
         if article.date >= requested_date:
             if (len(body["article"]["author"]) == 0 or article.author == body["article"]["author"]) and (len(body["article"]["type"]) == 0 or article.type == body["article"]["type"]):
                 articles_list.append({"type": article.type, "author": article.author,
                                       "date": str(article.date), "content": article.content})
-    message = {"from": "server", "id": unique_id,
+    message = {"from": "server", "id": unique_id, "address": address,
                "function": "GetArticles", "message": articles_list}
     channel.basic_publish(
         exchange="", routing_key=body["id"], body=json.dumps(message))
@@ -97,19 +104,19 @@ def handle_GetArticles(body):
 
 def handle_PublishArticle(body):
     global CLIENTELE, ARTICLES
-    print(" [x] PublishArticle request from %r" % body["id"])
+    print(" [x] ARTICLES PUBLISH FROM %r" % body["id"])
     if body["id"] in CLIENTELE:
         ARTICLES.append(
             article(body["article"]["type"], body["article"]["author"], body["article"]["content"][:200]))
         print(" [x] Article Published by%r" % body["id"])
 
-        message = {"from": "server", "id": unique_id, "function": "PublishArticle",
+        message = {"from": "server", "id": unique_id, "address": address, "function": "PublishArticle",
                    "message": "success"}
         channel.basic_publish(
             exchange="", routing_key=body["id"], body=json.dumps(message))
     else:
         print(" [x] Article Publish Failed by %r" % body["id"])
-        message = {"from": "server", "id": unique_id,
+        message = {"from": "server", "id": unique_id, "address": address,
                    "function": "PublishArticle", "message": "failed"}
 
         channel.basic_publish(
@@ -139,9 +146,9 @@ def main():
 
         elif body["from"] == "regserver":
             if body["message"] == "success":
-                print(" [x] Server Registered Successfully")
+                print(" [x] [SUCCESS] Server Registered Successfully")
             else:
-                print(" [x] Registration Failed on RegServer")
+                print(" [x] [FAIL] Registration Failed on RegServer")
                 print("Exiting...")
                 exit(0)
 

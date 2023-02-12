@@ -1,3 +1,4 @@
+import socket
 import threading
 import pika
 import json
@@ -11,6 +12,8 @@ connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
 channel = connection.channel()
 channel.queue_declare(queue="regserver")
 unique_id = str(uuid.uuid1())
+PORT = channel.connection._impl._transport._sock.getsockname()[1]
+address = "localhost:" + str(PORT)
 AVAILABLE_SERVERS = []
 JOINED_SERVERS = []
 
@@ -58,7 +61,7 @@ def publish_message():
             # GetServerList
             if method_number == 0:
                 message = {"from": "client",
-                           "id": unique_id, "function": function}
+                           "id": unique_id, "function": function, "address": address}
                 channel.basic_publish(
                     exchange="", routing_key="regserver", body=json.dumps(message))
                 print(" [x] Requested Server List...")
@@ -138,15 +141,21 @@ def handle_server_response(body):
             print(" [x] Failed to leave server.")
 
     elif body["function"] == "GetArticles":
-        print(" [x] Articles from server %r" % body["id"])
+        print(" [x] Articles from the server %r" % body["id"])
         articles = body["message"]
-        for article in articles:
-            print(article["date"])
-            print(article["topic"])
+        if len(articles) == 0:
+            print(" [x] No articles found.")
+
+        for i, article in enumerate(articles):
+            print()
+            print("---------[Article %r]---------" % i)
+            print(article["type"])
             print(article["author"])
+            print(article["date"])
             print(article["content"])
             print()
         print()
+
     elif body["function"] == "PublishArticle":
         if body["message"] == "success":
             print(" [x] Successfully posted article to server %r" % body["id"])
@@ -163,8 +172,14 @@ def consume_messages():
             handle_server_response(body)
         elif body["from"] == "regserver":
             global AVAILABLE_SERVERS
-            AVAILABLE_SERVERS = body["message"].split(",")
-            print(" [x] Server List: %r" % AVAILABLE_SERVERS)
+            # uuid#address,uuid#address
+            servers = body["message"].split(",")
+            print(" [x] Server List:")
+            for i, server in enumerate(servers):
+                s = server.split("#")
+                AVAILABLE_SERVERS.append(s[0])
+                print("Server %r.   %r    %r" % (i, s[0], s[1]))
+            print()
         else:
             print(" [x] Unrecognized Request from %r" % body["id"])
         channel.basic_ack(method_frame.delivery_tag)
