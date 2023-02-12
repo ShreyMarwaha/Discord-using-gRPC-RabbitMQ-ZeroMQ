@@ -39,27 +39,69 @@ else:
 
     running= True    
     while running:
+        print()
+        print(
+            "------------------------------------------------------------"
+        )
         print("Welcome!\n1 - Get Articles\n2 - Publish Article\n3 - Leave Server")
         choice = int(input("Enter Choice: "))
 
         if choice == 1:
             # response = stub.getArticles(serverpro_pb2.String(code=client_id))
-            print(response.value)
+            aType = int(input("Article Type - Sports (1) | Fashion (2) | Politics (3) : | All (4) : "))
+            temp=0
+            aAuthor = input("Article Author (enter all to leave blank): ")
+            if(aAuthor == "all"):
+                temp+=1
+                aAuthor = "<BLANK>"
+            aYear = int(input("Article Year (enter 13 to leave blank): "))
+            
+            if(aYear != 13):
+                aMonth = int(input("Article Month: "))
+                aDay = int(input("Article Day: "))
+                aTimers = int(input("Article Before (1) or On and After (2): "))
+                if (aTimers == 1):
+                    aTimers = -1
+                else:
+                    aTimers = 1
+                aTime = (datetime.datetime(aYear, aMonth, aDay) - datetime.datetime(1, 1, 1)).days
+            else:
+                temp+=1
+                aTime = -1
+                aTimers = -1
+
+            if(aType == 1):
+                packet = serverpro_pb2.getArticle(SPORTS=30, Author=aAuthor, Time=aTime, Timebf=aTimers,  User=client_id)
+            elif(aType == 2):
+                packet = serverpro_pb2.getArticle(FASHION=30, Author=aAuthor, Time=aTime, Timebf=aTimers,  User=client_id)
+            elif(aType == 3):
+                packet = serverpro_pb2.getArticle(POLITICS=30, Author=aAuthor, Time=aTime, Timebf=aTimers,  User=client_id)
+            elif(aType == 4):
+                if(temp == 2):
+                    print("Invalid Input - ALL BLANKS NOT ALLOWED")
+                    continue
+                packet = serverpro_pb2.getArticle(none=30, Author=aAuthor, Time=aTime, Timebf=aTimers,  User=client_id)
+            else:
+                print("Invalid Input")
+            
+            response = stub.fetchArticle(packet)
+            print("Articles: ", response.code)
+
+            
+
         elif choice == 2:
             aType = int(input("Article Type - Sports (1) | Fashion (2) | Politics (3) : "))
-            aAuthour= input("Article Authour: ")
-            aYear = int(input("Article Year: "))
-            aMonth = int(input("Article Month: "))
-            aDay = int(input("Article Day: "))
+            aAuthor= input("Article Author: ")
+
             aContent = input("Article Content (Max Length - 200 chars): ")[0:200]
 
-            aTime = (datetime.datetime(aYear, aMonth, aDay) - datetime.datetime(1, 1, 1)).days
+            aTime = (datetime.datetime.now() - datetime.datetime(1, 1, 1)).days
             if(aType == 1):
-                packet = serverpro_pb2.pubArticle(SPORTS=30, Author=aAuthour, Time=aTime, Content=aContent, User=client_id)
+                packet = serverpro_pb2.pubArticle(SPORTS=30, Author=aAuthor, Time=aTime, Content=aContent, User=client_id)
             elif(aType == 2):
-                packet = serverpro_pb2.pubArticle(FASHION=30, Author=aAuthour, Time=aTime, Content=aContent, User=client_id)
+                packet = serverpro_pb2.pubArticle(FASHION=30, Author=aAuthor, Time=aTime, Content=aContent, User=client_id)
             elif(aType == 3):
-                packet = serverpro_pb2.pubArticle(POLITICS=30, Author=aAuthour, Time=aTime, Content=aContent, User=client_id)
+                packet = serverpro_pb2.pubArticle(POLITICS=30, Author=aAuthor, Time=aTime, Content=aContent, User=client_id)
             else:
                 print("Invalid Article Type")
             response = stub.addArticle(packet)

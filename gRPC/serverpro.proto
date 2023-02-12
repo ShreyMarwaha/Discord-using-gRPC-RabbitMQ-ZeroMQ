@@ -26,6 +26,7 @@ message getArticle {
         int32 SPORTS = 1;
         int32 FASHION = 2;
         int32 POLITICS = 3;
+        int32 none = 8;
     }
     optional string Author = 4;
     optional int32 Time = 5;
