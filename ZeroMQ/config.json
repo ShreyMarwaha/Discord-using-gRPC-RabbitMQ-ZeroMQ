@@ -1,0 +1,6 @@
+{
+	"registry_server_port": 5555,
+	"registry_server_host": "localhost",
+	"max_servers": 10,
+	"max_clients_per_server": 10
+}
