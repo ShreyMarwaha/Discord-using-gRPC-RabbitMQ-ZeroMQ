@@ -68,6 +68,25 @@ if (start == True):
             print()
             return response
 
+        def fetchArticle(self, request, context):
+            print()
+            print("Request received to fetch article from user - ", request.User)
+            response = serverpro_pb2.String()
+
+            if(request.WhichOneof("Type") == "none"):
+                print("Searching for Articles ... <BLANK> " , request.Author, request.Time)
+                response.code = serverfunction.get_article("<BLANK>", request.Author , request.Time , request.Timebf, servNumber)
+            else:
+                print("Searching for Articles ... ", request.WhichOneof("Type") , request.Author, request.Time)
+                response.code = serverfunction.get_article(request.WhichOneof("Type"), request.Author , request.Time , request.Timebf, servNumber)
+            
+            print("Articles Sent to User")
+            return response
+
+            
+
+            
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     serverpro_pb2_grpc.add_serverFuncServicer_to_server(serverFuncServicer(), server)
