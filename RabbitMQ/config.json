@@ -3,5 +3,6 @@
 	"host": "localhost",
 	"username": "user",
 	"password": "pass",
-	"max_connections": 10
+	"max_servers": 10,
+	"max_clients_per_server": 10
 }
