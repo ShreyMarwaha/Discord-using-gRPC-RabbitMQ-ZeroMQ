@@ -1,8 +1,6 @@
 {
-	"port": 1000,
+	"port": 5672,
 	"host": "localhost",
-	"username": "user",
-	"password": "pass",
 	"max_servers": 10,
 	"max_clients_per_server": 10
 }
