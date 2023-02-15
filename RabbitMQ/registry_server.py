@@ -1,10 +1,5 @@
-import pika
-import os
-import sys
 import util
 import json
-import ast
-# This is basically a consumer
 
 config = json.load(open("config.json"))
 SERVERS = []
@@ -42,6 +37,7 @@ def handle_Register(body):
 
 
 def main():
+    util.print_status("Registry Server", "regserver", config["port"])
     channel.queue_declare(queue="regserver")
 
     def callback_server(ch, method, properties, body):
@@ -63,7 +59,6 @@ def main():
 
     channel.basic_consume(
         queue="regserver", on_message_callback=callback_server, auto_ack=True)
-    print(" [*] Name: Registry Server,  Status: Online. \nTo exit press CTRL+C")
     channel.start_consuming()
 
 
@@ -71,8 +66,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Exiting...")
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+        util.quit()

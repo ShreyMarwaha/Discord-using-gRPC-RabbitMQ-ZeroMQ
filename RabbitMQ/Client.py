@@ -1,19 +1,18 @@
-import socket
 import threading
 import pika
 import json
-import os
-import sys
 import uuid
 from time import sleep
+import util
 
-config = json.load(open("config.json"))
 connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
 channel = connection.channel()
 channel.queue_declare(queue="regserver")
+
 unique_id = str(uuid.uuid1())
 PORT = channel.connection._impl._transport._sock.getsockname()[1]
 address = "localhost:" + str(PORT)
+
 AVAILABLE_SERVERS = []
 JOINED_SERVERS = []
 
@@ -25,41 +24,16 @@ def ask(what_to_ask):
     return _
 
 
-def quit():
-    print("Exiting...")
-    try:
-        sys.exit(0)
-    except SystemExit:
-        os._exit(0)
-
-
-def select_one_from_list(arr, msg):
-    print("\n\n"+msg+" (Exit with -1)")
-    for i, ele in enumerate(arr):
-        print(str(i) + ". " + ele)
-
-    select = int(input("Select: "))
-    while select < -1 or len(arr) <= select:
-        print(select)
-        print(" [x] Invalid Selection. Select in the range [-1, %r]" %
-              (len(arr)-1))
-        select = int(input("Select: "))
-
-    if select >= 0:
-        return select, arr[select]
-    return -1, ""
-
-
 def publish_message():
     while True:
         try:
-            method_number, function = select_one_from_list(
+            method_number, function = util.select_one_from_list(
                 ["GetServerList", "JoinServer", "LeaveServer", "GetArticles", "PublishArticle"], "Enter the method number")
             if method_number == -1:
-                quit()
+                util.quit()
 
             # GetServerList
-            if method_number == 0:
+            elif method_number == 0:
                 message = {"from": "client",
                            "id": unique_id, "function": function, "address": address}
                 channel.basic_publish(
@@ -78,7 +52,7 @@ def publish_message():
 
                 print("Here is the list of servers.")
                 servers = AVAILABLE_SERVERS if method_number == 1 else JOINED_SERVERS
-                server_num, server_id = select_one_from_list(
+                server_num, server_id = util.select_one_from_list(
                     servers, "Enter the server number that you would like to message")
 
                 if server_num == -1:
@@ -88,7 +62,7 @@ def publish_message():
                 if method_number == 4:
                     message = {"from": "client", "id": unique_id,
                                "function": function, "article": None}
-                    _, type = select_one_from_list(
+                    _, type = util.select_one_from_list(
                         ["SPORTS", "FASHION", "POLITICS"], "Article Type")
                     if _ == -1:
                         continue
@@ -137,6 +111,7 @@ def handle_server_response(body):
     elif body["function"] == "LeaveServer":
         if body["message"] == "success":
             print(" [x] Successfully left server %r" % body["id"])
+            JOINED_SERVERS.remove(body["id"])
         else:
             print(" [x] Failed to leave server.")
 
@@ -187,6 +162,7 @@ def consume_messages():
 
 
 def main():
+    util.print_status("Client", unique_id, PORT)
     channel.queue_declare(queue=unique_id)
 
     # Create a thread to handle publishing messages
@@ -209,7 +185,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        quit()
+        util.quit()
 
 """
 Send
