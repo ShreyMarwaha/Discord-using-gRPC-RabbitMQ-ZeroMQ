@@ -47,85 +47,94 @@ def add_article(Type, Time, Author, Content, servNo):
     f.close()
     return currarticles
 
-def get_article(Type, Author, Time, TimeCondition, servNo):
-    f= open("/home/kali/Desktop/DSCD/A1/Code/ArticleList"+str(servNo), "r")
-    tempData = f.read()
-    currarticles = int(tempData[0])
-    if currarticles == 0:
-        return "No articles on server"
-
-    divider = "^~^"
-    searchRes = tempData
-    if TimeCondition == 531:
-        return tempData[1:]
-
-    if Type != "<BLANK>":
-        searchRes = ""
-        offset = tempData.find(Type)
-        while(offset != -1):
-            start = tempData.rfind(divider, 0, offset)
-            if start == -1:
-                start = 1
-            else:
-                start += len(divider)
-            end = tempData.find(divider, offset)
-            if end == -1:
-                end = len(tempData)
-            searchRes += tempData[start:end] + divider
-            
-            offset = tempData.find(Type, end)
+def get_article(Type, Author, Time, TimeCondition, servNos):
     
-    
-    if Author != "<BLANK>":
-        search = searchRes
-        searchRes = ""
-        offset = search.find(Author)
-        while(offset != -1):
-            start = search.rfind(divider, 0, offset)
-            if start == -1:
-                start = 2
-            else:
-                start += len(divider)+1
-            end = search.find(divider, offset)
-            if end == -1:
-                end = len(search)
-            searchRes += search[start:end]
-            offset = search.find(Author, end)
-    
-    # print(searchRes)
+    serv = len(servNos)
+    ans = ""
+    for i in range(serv):
+        servNo = servNos[i]
+        f= open("/home/kali/Desktop/DSCD/A1/Code/ArticleList"+str(servNo), "r")
+        tempData = f.read()
+        currarticles = int(tempData[0])
+        if currarticles == 0:
+            searchRes=""
+            continue
 
-    if Time != -1:
-        search = searchRes
-        searchRes = ""
-        timeStamp = "|&*~"
-        offset= search.find(timeStamp)
-        while(offset != -1):
-            date = int(search[offset+4:search.find("|", offset+1)])
-            if (TimeCondition < 0 ):
-                if date < Time:
-                    start = search.rfind(divider, 0, offset)
-                    if start == -1:
-                        start = 1
-                    else:
-                        start += len(divider)+1
-                    end = search.find(divider, offset)
-                    if end == -1:
-                        end = len(search)
-                    searchRes += search[start:end]
-            elif (TimeCondition > 0):
-                if date >= Time:
-                    start = search.rfind(divider, 0, offset)
-                    if start == -1:
-                        start = 1
-                    else:
-                        start += len(divider)+1
-                    end = search.find(divider, offset)
-                    if end == -1:
-                        end = len(search)
-                    searchRes += search[start:end]
-            offset = search.find(timeStamp, offset+1)
-    # print(searchRes)
-    return searchRes
+        divider = "^~^"
+        searchRes = tempData
+        # if TimeCondition == 531:
+        #     return tempData[1:]
+
+        if Type != "<BLANK>":
+            searchRes = ""
+            offset = tempData.find(Type)
+            while(offset != -1):
+                start = tempData.rfind(divider, 0, offset)
+                if start == -1:
+                    start = 1
+                else:
+                    start += len(divider)
+                end = tempData.find(divider, offset)
+                if end == -1:
+                    end = len(tempData)
+                searchRes += tempData[start:end] + divider
+                
+                offset = tempData.find(Type, end)
+        
+        
+        if Author != "<BLANK>":
+            search = searchRes
+            searchRes = ""
+            offset = search.find(Author)
+            while(offset != -1):
+                start = search.rfind(divider, 0, offset)
+                if start == -1:
+                    start = 1
+                else:
+                    start += len(divider)
+                end = search.find(divider, offset)
+                if end == -1:
+                    end = len(search)
+                searchRes += search[start:end] + divider
+                offset = search.find(Author, end)
+        
+        # print(searchRes)
+
+        if Time != -1:
+            search = searchRes
+            searchRes = ""
+            timeStamp = "|&*~"
+            offset= search.find(timeStamp)
+            while(offset != -1):
+                date = int(search[offset+4:search.find("|", offset+1)])
+                if (TimeCondition < 0 ):
+                    if date < Time:
+                        start = search.rfind(divider, 0, offset)
+                        if start == -1:
+                            start = 1
+                        else:
+                            start += len(divider)
+                        end = search.find(divider, offset)
+                        if end == -1:
+                            end = len(search)
+                        searchRes += search[start:end] + divider
+                elif (TimeCondition > 0):
+                    if date >= Time:
+                        start = search.rfind(divider, 0, offset)
+                        if start == -1:
+                            start = 1
+                        else:
+                            start += len(divider)
+                        end = search.find(divider, offset)
+                        if end == -1:
+                            end = len(search)
+                        searchRes += search[start:end] + divider
+                offset = search.find(timeStamp, offset+1)
+        # print(searchRes)
+        ans += searchRes
+    if ans == "":
+        return "No Articles Found"
+    return ans
 
 
                     
