@@ -3,7 +3,12 @@ import grpc
 import regpro_pb2
 import regpro_pb2_grpc
 
-sCode = "GOTM" #Enter 4 digit server code here
+sCode = input("Enter 4 letter server code... ") #Enter 4 digit server code here
+
+while(len(sCode) != 4):
+    sCode = input("Enter 4 letter server code... ")
+
+sCode = sCode.upper()
 
 print("Server " + sCode + " is requesting to register...")
 channel = grpc.insecure_channel('localhost:50051')
@@ -20,7 +25,8 @@ else:
     start=True
     
 servNumber = response.value
-
+serversToCheck = []
+serversToCheck.append(servNumber)
 
 if (start == True):
     import time
@@ -75,10 +81,10 @@ if (start == True):
 
             if(request.WhichOneof("Type") == "none"):
                 print("Searching for Articles ... <BLANK> " , request.Author, request.Time)
-                response.code = serverfunction.get_article("<BLANK>", request.Author , request.Time , request.Timebf, servNumber)
+                response.code = serverfunction.get_article("<BLANK>", request.Author , request.Time , request.Timebf, serversToCheck)
             else:
                 print("Searching for Articles ... ", request.WhichOneof("Type") , request.Author, request.Time)
-                response.code = serverfunction.get_article(request.WhichOneof("Type"), request.Author , request.Time , request.Timebf, servNumber)
+                response.code = serverfunction.get_article(request.WhichOneof("Type"), request.Author , request.Time , request.Timebf, serversToCheck)
             
             print("Articles Sent to User")
             return response
@@ -100,13 +106,31 @@ if (start == True):
     f.close()
 
     port = 50051 + servNumber
-    print('Starting server {sCode}. Listening on port {port}...')
+    print('Starting server ' + str(sCode) + ' . Listening on port ' + str(port))
     server.add_insecure_port('[::]:'+str(port))
     server.start()
 
     try:
         while True:
-            time.sleep(86400)
+            par = -1
+            try:
+                par = int(input("Press -> 0 - Get Servers || 1 - Register to a Server - "))
+            except ValueError:
+                print("Invalid Input")
+                continue
+
+            if (par == 0):
+                channel = grpc.insecure_channel('localhost:50051')
+                stub = regpro_pb2_grpc.regFuncStub(channel)
+                response = stub.fetchServers(regpro_pb2.Name(code="SERV"))
+                print(response.code)
+            elif (par == 1):
+                NewServer = int(input("Enter Server Code to Register to - "))
+                serversToCheck.append(NewServer)
+
+
+            
+            
     except KeyboardInterrupt:
         server.stop(0)
 

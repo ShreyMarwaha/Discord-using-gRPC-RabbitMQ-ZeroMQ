@@ -3,8 +3,9 @@ import grpc
 import regpro_pb2
 import regpro_pb2_grpc
 
-cName = "Nick" #Enter 4 digit server code here
-
+import uuid
+client_id = str(uuid.uuid1())
+cName = client_id
 print("Client " + cName + " is requesting servers...")
 channel = grpc.insecure_channel('localhost:50051')
 
@@ -14,8 +15,7 @@ response = stub.fetchServers(regpro_pb2.Name(code=cName))
 
 print(response.code)
 
-import uuid
-client_id = str(uuid.uuid1())
+
 import serverpro_pb2
 import serverpro_pb2_grpc
 
@@ -85,7 +85,29 @@ else:
                 print("Invalid Input")
             
             response = stub.fetchArticle(packet)
-            print("Articles: ", response.code)
+            
+            articlesList = response.code
+            # print(articlesList)
+            timeStamp = "&*~"
+            offset= articlesList.find(timeStamp)
+
+            while offset != -1:
+                start = offset
+                end = articlesList.find("|", offset+1)
+                days = int(articlesList[offset+3:end])
+
+                date = datetime.datetime(1, 1, 1) + datetime.timedelta(days=days)
+
+                # print("Date: ", date.strftime("%d/%m/%Y"))
+
+                articlesList = articlesList[0:start] + date.strftime("%d/%m/%Y") + articlesList[end:]
+                offset = articlesList.find(timeStamp, offset+1)
+
+            divider = "^~^"
+            
+            finalList = articlesList.replace(divider, "\n")
+            # print(articlesList)
+            print("Articles:\n", finalList)
 
             
 
@@ -105,7 +127,11 @@ else:
             else:
                 print("Invalid Article Type")
             response = stub.addArticle(packet)
-            print(response.value)
+            if response.value >0:
+                print("PUBLISH SUCCESSFUL")
+            else:
+                print("PUBLISH FAILED. TRY AGAIN")
+            # print(response.value)
 
 
         elif choice == 3:
