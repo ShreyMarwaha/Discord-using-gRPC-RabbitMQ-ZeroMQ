@@ -145,7 +145,6 @@ def handle_GetArticles(body):
 
 
 def handle_PublishArticle(body):
-    print(f"[DEBUG]\n{body}\n\n")
     global CLIENTELE, ARTICLES
     print(" [x] ARTICLES PUBLISH FROM %r %r" % (body["id"], body["from"]))
     if body["id"] in CLIENTELE or body["id"] in JOINED_SERVERS:
@@ -197,7 +196,6 @@ def handle_PublishArticle(body):
 
             for server_that_is_client in CLIENTELE_servers:
                 # if server_that_is_client != body["id"]:
-                print("[DEBUG]: sent article to %r" % server_that_is_client)
                 channel.basic_publish(
                     exchange="",
                     routing_key=server_that_is_client,
