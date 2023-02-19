@@ -126,7 +126,8 @@ if (start == True):
                 print(response.code)
             elif (par == 1):
                 NewServer = int(input("Enter Server Code to Register to - "))
-                serversToCheck.append(NewServer)
+                if(serversToCheck.count(NewServer) == 0):
+                    serversToCheck.append(NewServer)
 
 
             

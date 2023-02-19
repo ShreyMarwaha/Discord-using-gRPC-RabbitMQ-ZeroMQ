@@ -27,7 +27,8 @@ channel = grpc.insecure_channel('localhost:'+str(port))
 stub = serverpro_pb2_grpc.serverFuncStub(channel)
 
 response = stub.addUser(serverpro_pb2.String(code=client_id))
-
+serverMem =[]
+serverMem.append(int(server_id))
 # print(response.value)
 
 import datetime
@@ -39,15 +40,25 @@ else:
 
     running= True    
     while running:
-        print()
+        print("\n")
         print(
             "------------------------------------------------------------"
         )
-        print("Welcome!\n1 - Get Articles\n2 - Publish Article\n3 - Leave Server")
+        print("Connected to servers - ", serverMem)
+        print("Welcome!\n1 - Get Articles\n2 - Publish Article\n3 - Leave Server\n4 - Join Another Server")
         choice = int(input("Enter Choice: "))
 
         if choice == 1:
             # response = stub.getArticles(serverpro_pb2.String(code=client_id))
+            cS = int(input("Enter Server ID: "))
+            if cS not in serverMem:
+                print("Not Connected to this server")
+                continue
+
+            port = 50051 + cS
+            channel = grpc.insecure_channel('localhost:'+str(port))
+            stub = serverpro_pb2_grpc.serverFuncStub(channel)
+
             aType = int(input("Article Type - Sports (1) | Fashion (2) | Politics (3) : | All (4) : "))
             temp=0
             aAuthor = input("Article Author (enter all to leave blank): ")
@@ -112,6 +123,15 @@ else:
             
 
         elif choice == 2:
+            cS = int(input("Enter Server ID: "))
+            if cS not in serverMem:
+                print("Not Connected to this server")
+                continue
+
+            port = 50051 + cS
+            channel = grpc.insecure_channel('localhost:'+str(port))
+            stub = serverpro_pb2_grpc.serverFuncStub(channel)
+        
             aType = int(input("Article Type - Sports (1) | Fashion (2) | Politics (3) : "))
             aAuthor= input("Article Author: ")
 
@@ -135,14 +155,52 @@ else:
 
 
         elif choice == 3:
+            cS = int(input("Enter Server ID: "))
+            if cS not in serverMem:
+                print("Not Connected to this server")
+                continue
+
+            port = 50051 + cS
+            channel = grpc.insecure_channel('localhost:'+str(port))
+            stub = serverpro_pb2_grpc.serverFuncStub(channel)
+
             response = stub.removeUser(serverpro_pb2.String(code=client_id))
             # print(response.value)
             if response.value == 1:
                 print("UNREGISTRATION SUCCESSFUL")
+                serverMem.remove(cS)
             else:
                 print("UNREGISTRATION FAILED")
-                
-            running = False
-            break
+
+            
+
+
+        elif choice == 4:
+            print("Requesting servers...")
+            channel = grpc.insecure_channel('localhost:50051')
+
+            stub = regpro_pb2_grpc.regFuncStub(channel)
+
+            response = stub.fetchServers(regpro_pb2.Name(code=cName))
+
+            print(response.code)
+            server_id = int(input("Enter Server ID: "))
+            if server_id in serverMem:
+                print("Already Connected to this server")
+                continue
+
+            port = 50051 + int(server_id)
+            channel = grpc.insecure_channel('localhost:'+str(port))
+
+            stub = serverpro_pb2_grpc.serverFuncStub(channel)
+
+            response = stub.addUser(serverpro_pb2.String(code=client_id))
+            if response.value == 0:
+                print("REGISTRATION FAILED - Server Full")
+            else:
+                print("REGISTRATION SUCCESSFUL")
+                serverMem.append(int(server_id))
+
+
         else:
             print("Invalid Choice")
