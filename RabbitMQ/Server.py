@@ -77,6 +77,7 @@ def handle_JoinServer(body):
             CLIENTELE.add(body["id"])
             if body["from"] == "server":
                 CLIENTELE_servers.add(body["id"])
+
             print(" [x] Client Registered %r" % body["id"])
             print(" [x] Clientele: %r" % CLIENTELE)
             print(
@@ -89,6 +90,27 @@ def handle_JoinServer(body):
         message["reason"] = "server full"
 
     channel.basic_publish(exchange="", routing_key=body["id"], body=json.dumps(message))
+    if message["message"] == "success" and body["from"] == "server":
+        # TDOD: send all articles to new server
+        print("sending all articles to new server")
+        for article_key in ARTICLES:
+            article = ARTICLES[article_key]
+            message = {
+                "from": "server",
+                "id": unique_id,
+                "address": address,
+                "function": "PublishArticle",
+                "type": "request",
+                "article": {
+                    "type": article.type,
+                    "author": article.author,
+                    "datetime": str(article.datetime),
+                    "content": article.content,
+                },
+            }
+            channel.basic_publish(
+                exchange="", routing_key=body["id"], body=json.dumps(message)
+            )
 
 
 def handle_LeaveServer(body):
@@ -184,23 +206,21 @@ def handle_PublishArticle(body):
                 "from": "server",
                 "id": unique_id,
                 "function": "PublishArticle",
-                "article": None,
+                "article": {
+                    "type": article.type,
+                    "author": article.author,
+                    "content": article.content,
+                    "datetime": str(article.datetime),
+                },
             }
-            article = {
-                "type": article.type,
-                "author": article.author,
-                "content": article.content,
-                "datetime": str(article.datetime),
-            }
-            message["article"] = article
 
             for server_that_is_client in CLIENTELE_servers:
-                # if server_that_is_client != body["id"]:
-                channel.basic_publish(
-                    exchange="",
-                    routing_key=server_that_is_client,
-                    body=json.dumps(message),
-                )
+                if server_that_is_client != body["id"]:
+                    channel.basic_publish(
+                        exchange="",
+                        routing_key=server_that_is_client,
+                        body=json.dumps(message),
+                    )
         else:
             print("Article already exists")
     else:
