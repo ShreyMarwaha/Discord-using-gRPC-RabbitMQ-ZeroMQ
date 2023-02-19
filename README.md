@@ -1,2 +1,2 @@
-# RabbitMQ-Discord
-Implementation of discord using RabbitMQ
+# Discord - Pub/Sub
+Three Implementations of Discord-Like app using gRPC, RabbitMQ and ZeroMQ.
